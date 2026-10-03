@@ -124,3 +124,24 @@ def test_cli_reports_unreadable_input_and_exits_nonzero(
     err = capsys.readouterr().err
     assert "broken.png" in err and "cannot read image" in err
     assert "2 written, 1 failed" in err
+
+
+def test_skewed_sheet_shows_backing_and_edge_shadow(document: NDArray[np.uint8]) -> None:
+    sets = [
+        "geometry.scan_margin_mm=2",  # 2 mm = ~24 px of backing at 300 dpi on every side
+        "geometry.rotation_deg=1.0",
+        "geometry.backing.rgb=[0.5, 0.5, 0.5]",
+        "geometry.backing.texture_strength=0",
+        "geometry.edge_shadow.strength=0.6",
+        "geometry.edge_shadow.width_px=6",
+    ]
+    out, params = simulate_scan(document, load_config(overrides=sets)[0], 2)
+    gray = out.mean(axis=2)
+    x0, y0, x1, y1 = (round(v) for v in params["page_box_scan_px"])
+    assert x0 >= 22 and y0 >= 22 and gray.shape[1] >= 360 + 44  # scan area grew by the margin
+    backing = gray[2:8, x0 + 40 : x1 - 40].mean()  # top strip, outside the sheet
+    paper = gray[y0 + 60 : y0 + 80, x0 + 150 : x0 + 190].mean()
+    assert backing < paper - 40, "backing is visibly darker than paper"
+    # Shadow: just outside the sheet's left edge is darker than backing further out.
+    row = gray[y0 + 120, : x0 + 6]
+    assert row[-12:].min() < row[:8].mean() - 5

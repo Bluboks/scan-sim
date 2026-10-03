@@ -56,7 +56,8 @@ scan-sim INPUT OUTPUT [--preset NAME | --config FILE] [--set KEY=VALUE ...]
 사이드카 필드: `source`(입력 기준 상대 경로), `page`(PDF 쪽 번호, 이미지는 `null`), `output`, `preset`(프리셋 이름 또는 설정
 파일 경로), `base_seed`, `seed`(variant seed), `variant`, `dpi`, `input_dpi`(x, y, 출처
 `metadata`/`assumed`/`pdf-render`), `parameters`(이번 variant에서 실제로 뽑힌 모든 값, 발생한 잡티,
-JPEG 품질), `versions`(scan_sim, numpy, opencv, pillow).
+JPEG 품질, 그리고 입력→출력 좌표 변환 `input_to_scan_homography`와 `page_box_scan_px`.
+설명은 [PIPELINE](../architecture/PIPELINE.md)의 좌표 기록), `versions`(scan_sim, numpy, opencv, pillow).
 
 `simulate_scan(image, config, seed)`에 사이드카의 `seed`와 같은 설정을 넘기면 같은
 픽셀이 다시 나온다. 단, 이 함수는 입력을 `input.assumed_dpi` 해상도로 간주한다.

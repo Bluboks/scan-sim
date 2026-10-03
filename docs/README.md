@@ -30,7 +30,7 @@
   [HISTORY](HISTORY.md), [ADR-001](decisions/ADR-001-v01-scope.md),
   [ADR-002](decisions/ADR-002-units-and-order.md),
   [ADR-003](decisions/ADR-003-seeds.md), [ADR-004](decisions/ADR-004-config-schema.md),
-  [ADR-005](decisions/ADR-005-pdf-input.md)
+  [ADR-005](decisions/ADR-005-pdf-input.md), [ADR-006](decisions/ADR-006-sheet-border.md)
 - 구현: [PIPELINE](architecture/PIPELINE.md)
 - 사용자 표면: [CLI](reference/CLI.md), [CONFIG](reference/CONFIG.md)
 - 검증·운영: [VALIDATION](ops/VALIDATION.md), [WEB](ops/WEB.md)

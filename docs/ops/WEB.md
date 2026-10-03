@@ -72,7 +72,8 @@ tailscale serve --https=8445 off                     # 공개 중지
   맞춤 → 100% → 200% → 400% 순서로 확대한다. 비교 모드에서 터치로 한 번 탭하면 그 위치로
   경계선이 옮겨진다. 휴대폰처럼 화면이 좁거나 터치 기기면 아래에 경계 위치 슬라이더가
   나타난다. 보기 영역은 브라우저 기본 확대·스크롤을 막고(`touch-action: none`) 직접 처리한다.
-- 비교 화면의 원본은 스캔 결과와 같은 픽셀 크기로 맞춘 미리보기다. 배치 오차(회전·이동)는
+- 비교 화면의 원본은 변형마다 만든 미리보기다. 스캔 결과와 같은 픽셀 크기이고, 종이는 배치
+  오차가 없을 때의 위치(`page_box_scan_px`)에 놓이며 여백은 회색이다. 배치 오차(회전·이동)는
   보정하지 않으므로 그대로 보인다.
 - 오류는 서버가 보낸 메시지를 그대로 보여 준다. 예상 밖 오류는 traceback을 펼쳐 볼 수
   있고 서버 로그에도 남는다.
@@ -83,7 +84,7 @@ tailscale serve --https=8445 off                     # 공개 중지
 | --- | --- | --- |
 | GET | `/api/options` | 프리셋(요약 포함), 샘플, 한도 |
 | POST | `/api/jobs` | multipart: `file` 또는 `sample`, `preset`, `seed`, `variants`, `overrides`(줄마다 `--set` 값), `page`(PDF 쪽, 기본 1) |
-| GET | `/files/{job}/{name}` | `original.png`, `scan_0001.jpg`, `scan_0001.json` 등 |
+| GET | `/files/{job}/{name}` | `scan_0001.jpg`, `scan_0001.json`, `original_0001.png` 등 |
 | GET | `/samples/{name}` | 샘플 원본 |
 
 `/api/jobs` 오류: 400(설정·입력 오류, 메시지 그대로), 413(업로드 크기 초과),

@@ -39,6 +39,10 @@
 | `geometry.scale_x/y` | 배 | 축별 배율(용지 이송 속도 오차 포함) |
 | `geometry.translation_px.x/y` | S px | 페이지 이동 |
 | `geometry.perspective.enabled/max_corner_shift_ratio` | bool / 비율 | 네 모서리를 페이지 크기 대비 이 비율 안에서 무작위로 민다 |
+| `geometry.scan_margin_mm` | mm | 스캔 영역이 종이보다 사방으로 넓은 정도. 0이면 스캔 영역 = 종이 크기. 0보다 크면 출력 이미지가 커진다 |
+| `geometry.backing.rgb/brightness` | 반사율 / 배 | 종이가 덮지 않은 곳에 보이는 덮개·ADF 배경판의 색과 밝기 |
+| `geometry.backing.texture_strength` | 비율 | 배경판의 넓은 밝기 얼룩 |
+| `geometry.edge_shadow.strength/width_px` | 비율 / W px | 종이 가장자리가 배경판에 드리우는 얇은 그림자. 네 방향마다 세기가 무작위로 다르다 |
 | `scanner.dpi` | dpi | 출력 해상도 |
 | `scanner.resample` | `area`/`lanczos`/`cubic` | working → 스캐너 해상도 보간 방식 |
 | `scanner.psf.sigma_x/y` | S px | 광학 흐림. y는 용지 진행 방향 |
@@ -77,6 +81,9 @@
 | `geometry.rotation_deg` | -0.08~0.08 | -0.15~0.15 | -0.4~0.4 | -0.3~0.3 | -0.8~0.8 |
 | `geometry.translation_px.y` | -1~1 | -1.5~1.5 | -6~6 | -3~3 | -8~8 |
 | `geometry.perspective.max_corner_shift_ratio` | 0.0001 | 0.0004 | 0.0004 | 0.0008 | 0.0015 |
+| `geometry.scan_margin_mm` | 0 | 0 | 0 | 0 | 0~4 |
+| `geometry.backing.rgb` | 0.93 회색 | 0.88 회색 | 0.80 회색 | 0.70 누런 회색 | 0.75 회색 |
+| `geometry.edge_shadow.strength` | 0.05~0.2 | 0.15~0.4 | 0.2~0.5 | 0.3~0.7 | 0.2~0.8 |
 | `scanner.psf.sigma_y` | 0.3~0.5 | 0.35~0.6 | 0.45~0.8 | 0.5~0.85 | 0.5~1.2 |
 | `scanner.illumination.strength` | 0.001~0.005 | 0.002~0.01 | 0.002~0.01 | 0.01~0.025 | 0.01~0.03 |
 | `scanner.noise.gaussian_sigma` | 0.0003~0.001 | 0.0005~0.002 | 0.0005~0.002 | 0.002~0.005 | 0.002~0.006 |

@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Skewed or shifted sheets now show their border ([ADR-006](docs/decisions/ADR-006-sheet-border.md)):
+  the uncovered scan area shows the lid / ADF backing (`geometry.backing`), the sheet edge is
+  anti-aliased and throws a thin shadow (`geometry.edge_shadow`), and
+  `geometry.scan_margin_mm` can make the scan area larger than the page (`ocr-stress`: 0-4 mm;
+  office presets: 0). New config keys are required in custom full configs.
+- Sidecars record `input_to_scan_homography` (input pixel → output pixel, including placement
+  error, margin and resampling) and `page_box_scan_px`, for mapping OCR ground truth.
+- Reproducibility change: placement draws are unchanged for a given seed, but border pixels
+  differ from 0.1.0 output. With a scan margin the output is larger than the page.
+- Web UI: per-variant original previews aligned to the page box (`original_0001.png`, ...).
+
 ## 0.1.0 - 2026-10-03
 
 First public release. Implements the v0.1 scope of the

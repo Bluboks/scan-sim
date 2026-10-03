@@ -41,7 +41,9 @@ def test_upload_returns_downloadable_scans_with_cli_seeds(
     assert Image.open(io.BytesIO(scan.content)).size == tuple(job["size"])
     meta = json.loads(client.get(job["variants"][1]["metadata"]).content)
     assert str(meta["seed"]) == job["variants"][1]["seed"]
-    assert client.get(job["original"]).status_code == 200
+    preview = client.get(job["variants"][1]["original"])
+    assert preview.status_code == 200
+    assert Image.open(io.BytesIO(preview.content)).size == tuple(job["variants"][1]["size"])
 
 
 def test_bad_override_reports_the_real_validation_message(

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import cv2
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -38,15 +39,16 @@ def test_office_presets_keep_the_document_readable(
 
 @pytest.mark.parametrize("preset", [*OFFICE, "ocr-stress"])
 def test_preset_preserves_layout(preset: str, document: NDArray[np.uint8]) -> None:
-    """Degradation only: the scan stays strongly correlated with the original pixels."""
-    out, _ = simulate_scan(document, load_config(preset)[0], 5)
-    m = 12  # margin larger than the biggest placement shift tried below
+    """Degradation only: mapped back through the recorded homography, the scan matches."""
+    out, params = simulate_scan(document, load_config(preset)[0], 5)
+    to_scan = np.array(params["input_to_scan_homography"])
+    h, w = document.shape[:2]
+    back = cv2.warpPerspective(
+        out.mean(axis=2).astype(np.float32),
+        to_scan,
+        (w, h),
+        flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP,
+    )
+    m = 12  # skip the border: placement shifts up to ~10 px uncover backing there
     a = document.mean(axis=2)[m:-m, m:-m].ravel()
-    b = out.mean(axis=2)
-    h, w = b.shape
-
-    def corr(dy: int, dx: int) -> float:
-        return float(np.corrcoef(a, b[m + dy : h - m + dy, m + dx : w - m + dx].ravel())[0, 1])
-
-    # Placement error moves the page by a few pixels; compare at the best integer shift.
-    assert max(corr(dy, dx) for dy in range(-10, 11) for dx in range(-10, 11)) > 0.95
+    assert np.corrcoef(a, back[m:-m, m:-m].ravel())[0, 1] > 0.95

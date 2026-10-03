@@ -53,6 +53,17 @@ geometry:
   perspective:
     enabled: true
     max_corner_shift_ratio: 0.0008
+  # Scan area beyond the page on every side (mm); 0 = scan area equals the page.
+  scan_margin_mm: 0.0
+  # What shows where the skewed sheet does not cover the scan area (lid / ADF plate).
+  backing:
+    rgb: [0.70, 0.69, 0.66]
+    brightness: [0.80, 1.05]
+    texture_strength: [0.005, 0.015]
+  # Thin shadow the lifted sheet edge throws onto the backing (W px).
+  edge_shadow:
+    strength: [0.30, 0.70]
+    width_px: [3, 10]
 
 scanner:
   dpi: 300

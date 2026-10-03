@@ -440,10 +440,11 @@ function showJob(i) {
   }));
   $("empty").hidden = true;
   const first = !$("imgScan").getAttribute("src");
-  $("imgOrig").src = job.original;
+  $("imgOrig").src = v.original;
   $("imgScan").src = v.image;
-  $("stage").dataset.w = job.size[0];
-  $("stage").dataset.h = job.size[1];
+  const sizeChanged = $("stage").dataset.w !== String(v.size[0]) || $("stage").dataset.h !== String(v.size[1]);
+  $("stage").dataset.w = v.size[0];
+  $("stage").dataset.h = v.size[1];
   $("dlImg").href = v.image; $("dlImg").download = v.download_name;
   $("dlMeta").href = v.metadata; $("dlMeta").download = $("dlImg").download.replace(/\.[^.]+$/, ".json");
   $("dlImg").hidden = $("dlMeta").hidden = false;
@@ -458,7 +459,7 @@ function showJob(i) {
     tr.children[1].textContent = val === null ? "없음" : fmt(val);
     return tr;
   }));
-  if (first) setZoom(state.zoom); else layout();
+  if (first || sizeChanged) setZoom(state.zoom); else layout();
 }
 
 $("copyCli").onclick = () => navigator.clipboard.writeText($("cli").textContent).then(

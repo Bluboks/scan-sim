@@ -103,12 +103,26 @@ class PerspectiveConfig(_Model):
     max_corner_shift_ratio: float = Field(ge=0)
 
 
+class BackingConfig(_Model):
+    rgb: Vec3
+    brightness: Range
+    texture_strength: Range
+
+
+class EdgeShadowConfig(_Model):
+    strength: Range
+    width_px: Range
+
+
 class GeometryConfig(_Model):
     rotation_deg: Range
     scale_x: Range
     scale_y: Range
     translation_px: TranslationConfig
     perspective: PerspectiveConfig
+    scan_margin_mm: Range
+    backing: BackingConfig
+    edge_shadow: EdgeShadowConfig
 
 
 class IlluminationConfig(_Model):

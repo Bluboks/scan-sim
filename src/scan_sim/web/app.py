@@ -39,7 +39,7 @@ MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 MAX_VARIANTS = 6
 KEEP_JOBS = 40
 _JOB_ID = re.compile(r"^[0-9a-f]{32}$")
-_FILE_NAME = re.compile(r"^(original\.png|scan_\d{4}\.(jpg|png|json))$")
+_FILE_NAME = re.compile(r"^(original_\d{4}\.png|scan_\d{4}\.(jpg|png|json))$")
 
 
 def create_app(data_dir: Path, samples_dir: Path | None) -> FastAPI:
@@ -110,11 +110,7 @@ def create_app(data_dir: Path, samples_dir: Path | None) -> FastAPI:
                 label,
                 seed,
                 variants,
-            )
-            with Image.open(job_dir / f"scan_0001.{config.encoding.format}") as first:
-                size = first.size
-            _write_original_preview(
-                source_path, page_or_none, config, job_dir / "original.png", size
+                _original_image(source_path, page_or_none, config),
             )
         elapsed = time.perf_counter() - started
         _prune(jobs_dir, keep=KEEP_JOBS)
@@ -126,10 +122,9 @@ def create_app(data_dir: Path, samples_dir: Path | None) -> FastAPI:
             "preset": label,
             "base_seed": seed,
             "overrides": set_lines,
-            "size": list(size),
+            "size": results[0]["size"],
             "dpi": config.scanner.dpi,
             "elapsed_s": round(elapsed, 1),
-            "original": f"/files/{job_id}/original.png",
             "variants": results,
             "cli": _cli_equivalent(source_name, preset, seed, variants, set_lines),
         }
@@ -190,8 +185,13 @@ def _run_variants(
     label: str,
     seed: int,
     variants: int,
+    original: Image.Image,
 ) -> list[dict[str, Any]]:
-    """Same seeds as ``scan-sim <file> <dir> --seed S --variants N`` (relative = file name)."""
+    """Same seeds as ``scan-sim <file> <dir> --seed S --variants N`` (relative = file name).
+
+    Each variant gets its own original preview, because the scan margin (and so the
+    output size) can differ per variant.
+    """
     results = []
     for v in range(1, variants + 1):
         vseed = derive_seed(seed_key(source_name, page), seed, v)
@@ -211,9 +211,15 @@ def _run_variants(
             )
         except ScanSimError as exc:
             raise HTTPException(400, str(exc).replace(str(source_path), source_name)) from exc
+        with Image.open(out) as scanned:
+            size = scanned.size
+        preview = job_dir / f"original_{v:04d}.png"
+        _write_original_preview(original, meta["parameters"]["page_box_scan_px"], size, preview)
         results.append(
             {
                 "variant": v,
+                "size": list(size),
+                "original": f"/files/{job_id}/{preview.name}",
                 # 63-bit seeds exceed JavaScript's exact integer range; send as text.
                 "seed": str(vseed),
                 "download_name": output_name(Path(source_name).stem, page, v, out.suffix),
@@ -250,16 +256,25 @@ def _store_input(
     raise HTTPException(400, "upload a file or choose a sample")
 
 
-def _write_original_preview(
-    source: Path, page: int | None, config: SimulationConfig, target: Path, size: tuple[int, int]
-) -> None:
-    """Original at the scan's pixel size (PDF pages rendered at scanner DPI) for overlaying."""
+def _original_image(source: Path, page: int | None, config: SimulationConfig) -> Image.Image:
+    """The input as the viewer shows it: PDF pages rendered at scanner DPI, alpha on white."""
     original = read_source(source, config.input, float(config.scanner.dpi), page)
     rgb = np.rint(np.clip(original.rgb, 0.0, 1.0) * 255.0).astype(np.uint8)
-    img = Image.fromarray(rgb, mode="RGB")
-    if img.size != size:
-        img = img.resize(size, Image.Resampling.LANCZOS)
-    img.save(target, compress_level=3)
+    return Image.fromarray(rgb, mode="RGB")
+
+
+def _write_original_preview(
+    original: Image.Image, page_box: list[float], size: tuple[int, int], target: Path
+) -> None:
+    """Original placed where the page sits in the scan (no placement error), for overlaying.
+
+    Outside the page (scan margin) stays neutral grey.
+    """
+    x0, y0, x1, y1 = (round(v) for v in page_box)
+    page = original.resize((x1 - x0, y1 - y0), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGB", size, (128, 128, 128))
+    canvas.paste(page, (x0, y0))
+    canvas.save(target, compress_level=3)
 
 
 def _prune(jobs_dir: Path, keep: int) -> None:

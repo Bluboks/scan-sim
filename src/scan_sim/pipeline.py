@@ -43,21 +43,17 @@ def simulate_source(
     sheet = paper.composite(sheet, coverage)
     del coverage
 
-    # [7] placement on the scanner glass
-    scanner_px = working_dpi / config.scanner.dpi
-    sheet = geometry.place_on_scanner(
-        sheet,
-        config.geometry,
-        scanner_px,
-        config.paper.base_rgb,
-        stage_rng(seed, "geometry"),
-        rec,
+    # [7] placement on the scanner glass, backing and sheet-edge shadow
+    sheet, placement = geometry.place_on_scanner(
+        sheet, config.geometry, working_dpi, config.scanner.dpi, stage_rng(seed, "geometry"), rec
     )
+    canvas_h, canvas_w = sheet.shape[:2]
 
     # [8]-[14] scanner
     srng = stage_rng(seed, "scanner")
     scan = scanner.resample(sheet, config.scanner, working_dpi)
     del sheet
+    _record_mapping(rec, source, (w, h), (canvas_w, canvas_h), scan.shape[1::-1], placement)
     scan = scanner.optical_psf(scan, config.scanner, srng, rec)
     scan = scanner.illumination(scan, config.scanner, srng, rec)
     scan = scanner.sensor_noise(scan, config.scanner, srng, rec)
@@ -70,3 +66,38 @@ def simulate_source(
 
     out = np.rint(scan * np.float32(255.0)).astype(np.uint8)
     return out, rec
+
+
+def _pixel_scale(sx: float, sy: float) -> NDArray[np.float64]:
+    """Pixel-centre mapping of a resize by (sx, sy), as OpenCV resamples."""
+    return np.array([[sx, 0, 0.5 * sx - 0.5], [0, sy, 0.5 * sy - 0.5], [0, 0, 1]], float)
+
+
+def _record_mapping(
+    rec: dict[str, Any],
+    source: SourceImage,
+    page_wh: tuple[int, int],
+    canvas_wh: tuple[int, int],
+    scan_wh: tuple[int, ...],
+    placement: NDArray[np.float64],
+) -> None:
+    """Store where input pixels land in the scan, for mapping OCR ground truth.
+
+    ``input_to_scan_homography`` maps input pixel coordinates (x, y, 1) to output
+    pixel coordinates, including the placement error. ``page_box_scan_px`` is where the
+    page would sit without placement error (the scan margin, if any).
+    """
+    src_h, src_w = source.rgb.shape[:2]
+    to_working = _pixel_scale(page_wh[0] / src_w, page_wh[1] / src_h)
+    fx, fy = scan_wh[0] / canvas_wh[0], scan_wh[1] / canvas_wh[1]
+    to_scan = _pixel_scale(fx, fy)
+    total = to_scan @ placement @ to_working
+    rec["input_to_scan_homography"] = (total / total[2, 2]).tolist()
+    margin_x = (canvas_wh[0] - page_wh[0]) / 2
+    margin_y = (canvas_wh[1] - page_wh[1]) / 2
+    rec["page_box_scan_px"] = [
+        margin_x * fx,
+        margin_y * fy,
+        (margin_x + page_wh[0]) * fx,
+        (margin_y + page_wh[1]) * fy,
+    ]

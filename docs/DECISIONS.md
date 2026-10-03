@@ -12,6 +12,7 @@ trade-off, 후속을 짧게 남긴다. 결정 주체(소유자 결정 / 에이�
 | [ADR-003](decisions/ADR-003-seeds.md) | ACCEPTED · 2026-10-02 | 에이전트(위임) | seed 파생과 단계별 난수 스트림 |
 | [ADR-004](decisions/ADR-004-config-schema.md) | ACCEPTED · 2026-10-02 | 에이전트(위임) | 완전한 프리셋, 엄격한 스키마, 추가 키 |
 | [ADR-005](decisions/ADR-005-pdf-input.md) | ACCEPTED · 2026-10-03 | 소유자 · 에이전트(위임) | PDF 입력, pypdfium2, 페이지별 이름과 seed |
+| [ADR-006](decisions/ADR-006-sheet-border.md) | ACCEPTED · 2026-10-03 | 소유자 · 에이전트(위임) | 종이 경계, 배경판, 스캔 여백, 좌표 기록 |
 
 ## Template
 

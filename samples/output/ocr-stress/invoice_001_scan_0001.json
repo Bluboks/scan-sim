@@ -35,26 +35,60 @@
     "translation_x_px": 7.625576784344673,
     "translation_y_px": -3.81879855268285,
     "perspective_max_corner_shift_px": 4.268066674726711,
+    "scan_margin_mm": 3.8561016719816434,
+    "backing_brightness": 1.0070029712801458,
+    "backing_texture_strength": 0.010504540855816504,
+    "edge_shadow_strength": 0.27050257649547926,
+    "edge_shadow_width_px": 5.171094984536776,
+    "edge_shadow_side_weights": [
+      0.5216421076244662,
+      0.5052636720872784,
+      0.41909358430803145,
+      0.8172379089173174
+    ],
+    "input_to_scan_homography": [
+      [
+        1.0092207933085453,
+        0.005467512686665791,
+        35.70708602591533
+      ],
+      [
+        -0.0021485136723042126,
+        1.002761792827479,
+        47.92234013897098
+      ],
+      [
+        9.456503564484962e-07,
+        7.774766575946473e-07,
+        1.0
+      ]
+    ],
+    "page_box_scan_px": [
+      45.5,
+      45.5,
+      2525.5,
+      3553.5
+    ],
     "scanner_psf_sigma_x": 0.6209337523114214,
     "scanner_psf_sigma_y": 0.7855502558415497,
     "illumination_strength": 0.012320064744497362,
     "illumination_edge_falloff": 0.016992760696874894,
-    "noise_gaussian_sigma": 0.0020592754104855303,
-    "noise_shot_strength": 0.003182978343865679,
-    "noise_row_sigma": 0.0009425498136443926,
-    "noise_column_sigma": 0.0006465303078549626,
+    "noise_gaussian_sigma": 0.004297627719171027,
+    "noise_shot_strength": 0.004141397026120139,
+    "noise_row_sigma": 0.0006503352525078965,
+    "noise_column_sigma": 0.0012708065930185184,
     "white_balance": [
-      0.9991228692771303,
-      1.0025320658626238,
-      0.9945469476644594
+      0.9985927549080673,
+      1.0027065001271,
+      0.9988684556626317
     ],
-    "tone_gamma": 0.960757171785125,
-    "tone_black_level": 0.10110701083886575,
-    "tone_white_level": 0.897258275994367,
-    "background_threshold": 0.8686173316254281,
-    "background_strength": 0.44643839959502757,
-    "sharpen_sigma": 0.4259091451105154,
-    "sharpen_amount": 0.40055251366667377,
+    "tone_gamma": 0.9501981266498194,
+    "tone_black_level": 0.08813721664949374,
+    "tone_white_level": 0.9403067430810569,
+    "background_threshold": 0.9109846511462087,
+    "background_strength": 0.3798829946691267,
+    "sharpen_sigma": 0.7876927618234411,
+    "sharpen_amount": 0.011275507444764198,
     "vertical_streak": null,
     "horizontal_banding": {
       "strength": 0.00734377736796374,
