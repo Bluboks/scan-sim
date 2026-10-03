@@ -1,0 +1,108 @@
+# office-aged: a document that has been copied and scanned a few times.
+# Lower contrast, slightly dark and uneven background, softer and rougher edges,
+# heavier toner mottle, more noise, lower JPEG quality. Not just a yellow tint.
+# Units and meaning of every key: docs/reference/CONFIG.md.
+# A two-item list [min, max] is sampled uniformly per variant; a number is fixed.
+
+input:
+  assumed_dpi: 300
+  dpi_from_metadata: true
+  max_page_mm: 450
+
+working:
+  dpi: 600
+
+printer:
+  color_matrix:
+    - [0.995, 0.004, 0.001]
+    - [0.003, 0.994, 0.003]
+    - [0.001, 0.006, 0.993]
+  gamma: [1.02, 1.10]
+  black_density: [0.95, 0.98]
+  psf:
+    sigma_x: [0.50, 0.90]
+    sigma_y: [0.55, 1.00]
+  dot_gain:
+    enabled: true
+    radius_px: [0.15, 0.40]
+    strength: [0.10, 0.25]
+  edge_roughness_px: [0.10, 0.30]
+  toner_density_noise:
+    strength: [0.010, 0.030]
+    scale_px: [6, 30]
+
+paper:
+  base_rgb: [0.935, 0.925, 0.895]
+  low_frequency:
+    strength: [0.008, 0.020]
+    scale_px: [200, 900]
+  fiber:
+    strength: [0.003, 0.008]
+    scale_px: [8, 50]
+    elongation: [1.5, 3.0]
+  fine_grain:
+    strength: [0.002, 0.004]
+
+geometry:
+  rotation_deg: [-0.30, 0.30]
+  scale_x: [0.9994, 1.0006]
+  scale_y: [0.9994, 1.0006]
+  translation_px:
+    x: [-3.0, 3.0]
+    y: [-3.0, 3.0]
+  perspective:
+    enabled: true
+    max_corner_shift_ratio: 0.0008
+
+scanner:
+  dpi: 300
+  resample: area
+  psf:
+    sigma_x: [0.40, 0.70]
+    sigma_y: [0.50, 0.85]
+  illumination:
+    strength: [0.010, 0.025]
+    edge_falloff: [0.005, 0.020]
+  noise:
+    gaussian_sigma: [0.0020, 0.0050]
+    shot_strength: [0.0010, 0.0040]
+    row_sigma: [0.0005, 0.0015]
+    column_sigma: [0.0003, 0.0010]
+  color_matrix:
+    - [1.002, -0.001, -0.001]
+    - [-0.002, 1.004, -0.002]
+    - [-0.001, 0.001, 1.000]
+  white_balance:
+    - [0.998, 1.004]
+    - [0.998, 1.003]
+    - [0.992, 1.000]
+  tone:
+    gamma: [0.95, 1.00]
+    black_level: [0.03, 0.07]
+    white_level: [0.93, 0.97]
+  background_suppression:
+    enabled: true
+    threshold: [0.88, 0.94]
+    strength: [0.0, 0.10]
+  sharpening:
+    enabled: true
+    sigma: [0.45, 0.85]
+    amount: [0.20, 0.45]
+
+artifacts:
+  vertical_streak:
+    probability: 0.05
+    strength: [0.005, 0.020]
+    width_px: [1, 2]
+  horizontal_banding:
+    probability: 0.10
+    strength: [0.002, 0.008]
+    scale_px: [8, 40]
+
+encoding:
+  format: jpg
+  jpeg_quality: [78, 88]
+  subsampling: auto
+
+metadata:
+  save: true

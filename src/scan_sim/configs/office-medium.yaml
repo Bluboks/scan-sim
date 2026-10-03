@@ -1,0 +1,107 @@
+# office-medium: ordinary office scan. Default preset.
+# Laser print on white copy paper, colour scan at 300 dpi on a flatbed MFP, JPEG ~90.
+# Units and meaning of every key: docs/reference/CONFIG.md.
+# A two-item list [min, max] is sampled uniformly per variant; a number is fixed.
+
+input:
+  assumed_dpi: 300
+  dpi_from_metadata: true
+  max_page_mm: 450
+
+working:
+  dpi: 600
+
+printer:
+  color_matrix:
+    - [0.995, 0.004, 0.001]
+    - [0.003, 0.994, 0.003]
+    - [0.001, 0.006, 0.993]
+  gamma: [1.00, 1.04]
+  black_density: [0.975, 0.990]
+  psf:
+    sigma_x: [0.25, 0.45]
+    sigma_y: [0.30, 0.55]
+  dot_gain:
+    enabled: true
+    radius_px: [0.05, 0.25]
+    strength: [0.05, 0.15]
+  edge_roughness_px: [0.0, 0.15]
+  toner_density_noise:
+    strength: [0.001, 0.008]
+    scale_px: [6, 25]
+
+paper:
+  base_rgb: [0.968, 0.965, 0.954]
+  low_frequency:
+    strength: [0.002, 0.008]
+    scale_px: [250, 1000]
+  fiber:
+    strength: [0.001, 0.004]
+    scale_px: [10, 40]
+    elongation: [1.5, 3.0]
+  fine_grain:
+    strength: [0.0005, 0.002]
+
+geometry:
+  rotation_deg: [-0.15, 0.15]
+  scale_x: [0.9994, 1.0006]
+  scale_y: [0.9994, 1.0006]
+  translation_px:
+    x: [-1.5, 1.5]
+    y: [-1.5, 1.5]
+  perspective:
+    enabled: true
+    max_corner_shift_ratio: 0.0004
+
+scanner:
+  dpi: 300
+  resample: area
+  psf:
+    sigma_x: [0.25, 0.45]
+    sigma_y: [0.35, 0.60]
+  illumination:
+    strength: [0.002, 0.010]
+    edge_falloff: [0.001, 0.008]
+  noise:
+    gaussian_sigma: [0.0005, 0.0020]
+    shot_strength: [0.0, 0.0015]
+    row_sigma: [0.0, 0.0008]
+    column_sigma: [0.0, 0.0005]
+  color_matrix:
+    - [1.002, -0.001, -0.001]
+    - [-0.002, 1.004, -0.002]
+    - [-0.001, 0.001, 1.000]
+  white_balance:
+    - [0.998, 1.004]
+    - [0.998, 1.003]
+    - [0.992, 1.000]
+  tone:
+    gamma: [1.00, 1.08]
+    black_level: [0.0, 0.02]
+    white_level: 1.0
+  background_suppression:
+    enabled: true
+    threshold: [0.86, 0.92]
+    strength: [0.05, 0.25]
+  sharpening:
+    enabled: true
+    sigma: [0.45, 0.85]
+    amount: [0.20, 0.45]
+
+artifacts:
+  vertical_streak:
+    probability: 0.02
+    strength: [0.004, 0.012]
+    width_px: [1, 2]
+  horizontal_banding:
+    probability: 0.0
+    strength: [0.002, 0.006]
+    scale_px: [8, 40]
+
+encoding:
+  format: jpg
+  jpeg_quality: [90, 96]
+  subsampling: auto
+
+metadata:
+  save: true

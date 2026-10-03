@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>scan-sim</title>
+<style>
+:root {
+  --bg: #f4f4f2; --panel: #ffffff; --ink: #1d1d1f; --muted: #6b6b70; --line: #dcdcd8;
+  --accent: #2856c8; --accent-ink: #ffffff; --danger: #b42318; --danger-bg: #fdecea;
+  --viewer: #2a2a2d; --chip: #eef1f8;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161618; --panel: #1f1f22; --ink: #ececee; --muted: #9a9aa2; --line: #333338;
+    --accent: #6d93ff; --accent-ink: #0e1222; --danger: #ff8a80; --danger-bg: #3a1d1b;
+    --viewer: #0f0f11; --chip: #262a36;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 14px/1.5 "Pretendard", "Noto Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
+  display: grid; grid-template-columns: 320px 1fr; min-height: 100vh;
+}
+aside {
+  background: var(--panel); border-right: 1px solid var(--line); padding: 18px 18px 24px;
+  overflow-y: auto; max-height: 100vh;
+}
+main { display: flex; flex-direction: column; min-width: 0; max-height: 100vh; }
+h1 { font-size: 17px; margin: 0 0 2px; letter-spacing: -0.01em; }
+.sub { color: var(--muted); font-size: 12.5px; margin: 0 0 18px; }
+label.f { display: block; font-weight: 600; font-size: 12.5px; margin: 16px 0 6px; }
+select, input[type=number], textarea {
+  width: 100%; font: inherit; color: inherit; background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px;
+}
+textarea { font-family: ui-monospace, "D2Coding", Consolas, monospace; font-size: 12px; min-height: 70px; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { flex: 1; border: 0; background: transparent; color: var(--muted); padding: 7px; font: inherit; cursor: pointer; }
+.seg button.on { background: var(--chip); color: var(--ink); font-weight: 600; }
+.drop {
+  border: 1.5px dashed var(--line); border-radius: 10px; padding: 18px 12px; text-align: center;
+  color: var(--muted); cursor: pointer; margin-top: 8px; font-size: 13px;
+}
+.drop.over { border-color: var(--accent); color: var(--accent); }
+.drop b { color: var(--ink); word-break: break-all; }
+.drop img { display: block; max-width: 100%; max-height: 160px; margin: 0 auto 8px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.paste-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.paste-row .btn { flex: 1; }
+kbd { font: 11px ui-monospace, Consolas, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; }
+.hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+.row { display: flex; gap: 8px; }
+.row > * { flex: 1; }
+.btn {
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px;
+  padding: 7px 12px; font: inherit; cursor: pointer; white-space: nowrap;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; width: 100%; padding: 10px; margin-top: 20px; }
+.btn.primary:disabled { opacity: .55; cursor: progress; }
+details.adv { margin-top: 16px; }
+details.adv summary { cursor: pointer; font-weight: 600; font-size: 12.5px; }
+.runbar { position: sticky; bottom: -24px; background: var(--panel); padding: 2px 0 14px; margin-bottom: -14px; }
+.status { margin-top: 10px; font-size: 12.5px; color: var(--muted); min-height: 1.5em; }
+.error {
+  background: var(--danger-bg); color: var(--danger); border-radius: 8px; padding: 10px 12px;
+  margin-top: 12px; font-size: 13px; white-space: pre-wrap; word-break: break-word;
+}
+.error pre { font-size: 11px; max-height: 240px; overflow: auto; color: var(--ink); }
+
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 14px;
+  background: var(--panel); border-bottom: 1px solid var(--line);
+}
+.toolbar .sep { width: 1px; height: 22px; background: var(--line); }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 12.5px; cursor: pointer; }
+.tabs button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.zoom { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12.5px; min-width: 44px; text-align: right; }
+.spacer { flex: 1; }
+a.btn { text-decoration: none; display: inline-block; }
+
+.wrap { position: relative; flex: 1; min-height: 0; background: var(--viewer); }
+.viewer { position: absolute; inset: 0; overflow: auto; cursor: grab; touch-action: none; overscroll-behavior: contain; }
+.viewer.drag { cursor: grabbing; }
+.stage { position: relative; margin: 0 auto; }
+.stage img { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
+.stage.px img { image-rendering: pixelated; }
+.divider { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.35); cursor: ew-resize; z-index: 2; touch-action: none; }
+.divider::after {
+  content: "⇆"; position: absolute; top: 50%; left: -16px; width: 30px; height: 30px; margin-top: -15px;
+  border-radius: 50%; background: #fff; color: #222; display: grid; place-items: center; font-size: 15px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.4);
+}
+.divider .hit { position: absolute; top: 0; bottom: 0; left: -12px; width: 24px; }
+.splitbar { display: none; align-items: center; gap: 10px; padding: 8px 14px; background: var(--panel); border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+.splitbar input { flex: 1; accent-color: var(--accent); height: 28px; }
+.gesture-hint { display: none; }
+@media (pointer: coarse), (max-width: 820px) {
+  .splitbar { display: flex; }
+  .splitbar[hidden] { display: none; }
+  .divider .hit { left: -24px; width: 48px; }
+  .divider::after { width: 40px; height: 40px; left: -21px; margin-top: -20px; font-size: 18px; }
+  .gesture-hint { display: inline; }
+}
+.tag { position: absolute; top: 10px; z-index: 3; background: rgba(0,0,0,.6); color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 6px; pointer-events: none; }
+.tag.l { left: 10px; } .tag.r { right: 10px; }
+.empty { position: absolute; inset: 0; display: grid; place-items: center; color: #9a9aa2; text-align: center; padding: 20px; }
+
+.info { background: var(--panel); border-top: 1px solid var(--line); max-height: 30vh; overflow: auto; }
+.info details { padding: 8px 14px; }
+.info summary { cursor: pointer; font-weight: 600; font-size: 12.5px; }
+.cli { display: flex; gap: 8px; align-items: center; margin: 8px 0 4px; }
+.cli code { flex: 1; font-size: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; overflow-x: auto; white-space: nowrap; }
+table.params { border-collapse: collapse; font-size: 12px; margin-top: 8px; width: 100%; }
+table.params td { border-bottom: 1px solid var(--line); padding: 3px 8px 3px 0; vertical-align: top; }
+table.params td:first-child { color: var(--muted); font-family: ui-monospace, Consolas, monospace; width: 40%; }
+table.params td:last-child { font-variant-numeric: tabular-nums; font-family: ui-monospace, Consolas, monospace; }
+
+@media (max-width: 820px) {
+  body { grid-template-columns: 1fr; }
+  .toolbar { gap: 6px; padding: 8px 10px; }
+  .toolbar .sep { display: none; }
+  .toolbar .btn, .toolbar .seg button { padding: 6px 9px; }
+  .zoom { min-width: 0; }
+  .toolbar .long, .toolbar [data-zoom="4"] { display: none; }  /* pinch covers deep zoom */
+  aside { max-height: none; border-right: 0; border-bottom: 1px solid var(--line); }
+  main { max-height: none; height: 100vh; height: 100svh; }
+}
+</style>
+</head>
+<body>
+<aside>
+  <h1>scan-sim</h1>
+  <p class="sub">문서를 사무용 프린터로 출력해 복합기로 스캔한 것처럼 변환합니다.</p>
+
+  <label class="f">문서</label>
+  <div class="seg" id="srcSeg">
+    <button type="button" data-src="sample" class="on">샘플</button>
+    <button type="button" data-src="upload">내 파일</button>
+  </div>
+  <div id="srcSample">
+    <select id="sample" style="margin-top:8px"></select>
+  </div>
+  <div id="srcUpload" hidden>
+    <div class="drop" id="drop">파일을 끌어다 놓거나 눌러서 선택<br><span class="hint">PNG · JPG · TIFF · BMP · PDF</span></div>
+    <input type="file" id="file" accept=".png,.jpg,.jpeg,.tif,.tiff,.bmp,.pdf" hidden>
+    <div class="paste-row">
+      <button type="button" class="btn" id="pasteBtn">클립보드에서 붙여넣기</button>
+    </div>
+    <div class="hint" id="dpiHint"><kbd>Ctrl</kbd>+<kbd>V</kbd>로도 붙여넣을 수 있습니다. DPI 정보가 없는 이미지(클립보드 포함)는 300 dpi로 봅니다.</div>
+  </div>
+
+  <div id="pageRow" hidden>
+    <label class="f" for="page">PDF 페이지</label>
+    <input type="number" id="page" value="1" min="1" step="1">
+    <div class="hint" id="pageHint">PDF는 페이지 하나씩 변환합니다. 페이지는 600 dpi로 렌더링합니다.</div>
+  </div>
+
+  <label class="f" for="preset">프리셋</label>
+  <select id="preset"></select>
+  <div class="hint" id="presetSummary"></div>
+
+  <div class="row">
+    <div>
+      <label class="f" for="seed">Seed</label>
+      <div class="row" style="gap:6px">
+        <input type="number" id="seed" value="0" min="0" step="1">
+        <button type="button" class="btn" id="rand" title="무작위 seed" style="flex:0">🎲</button>
+      </div>
+    </div>
+    <div style="flex:0 0 92px">
+      <label class="f" for="variants">변형 수</label>
+      <select id="variants"></select>
+    </div>
+  </div>
+
+  <details class="adv">
+    <summary>설정 덮어쓰기 (--set)</summary>
+    <textarea id="overrides" placeholder="한 줄에 하나씩&#10;geometry.rotation_deg=-0.5,0.5&#10;encoding.jpeg_quality=80&#10;scanner.dpi=200"></textarea>
+    <div class="hint">키 목록: docs/reference/CONFIG.md · 두 값은 범위, 한 값은 고정값</div>
+  </details>
+
+  <div class="runbar">
+    <button type="button" class="btn primary" id="run">변환하기</button>
+    <div class="status" id="status"></div>
+  </div>
+  <div id="err"></div>
+</aside>
+
+<main>
+  <div class="toolbar">
+    <div class="tabs" id="tabs"></div>
+    <div class="sep"></div>
+    <div class="seg" id="modeSeg" style="width:auto">
+      <button type="button" data-mode="compare" class="on">비교</button>
+      <button type="button" data-mode="scan">스캔</button>
+      <button type="button" data-mode="orig">원본</button>
+    </div>
+    <div class="sep"></div>
+    <button type="button" class="btn" data-zoom="fit">맞춤</button>
+    <button type="button" class="btn" data-zoom="1">100%</button>
+    <button type="button" class="btn" data-zoom="2">200%</button>
+    <button type="button" class="btn" data-zoom="4">400%</button>
+    <span class="zoom" id="zoomLabel"></span>
+    <div class="spacer"></div>
+    <a class="btn" id="dlImg" hidden download>이미지<span class="long"> 받기</span></a>
+    <a class="btn" id="dlMeta" hidden download>JSON<span class="long"> 받기</span></a>
+  </div>
+  <div class="wrap" id="wrap">
+    <div class="viewer" id="viewer">
+      <div class="stage" id="stage">
+        <img id="imgOrig" alt="원본">
+        <img id="imgScan" alt="스캔 결과">
+      </div>
+    </div>
+    <div class="divider" id="divider" hidden><div class="hit"></div></div>
+    <span class="tag l" id="tagL" hidden>원본</span>
+    <span class="tag r" id="tagR" hidden>스캔</span>
+    <div class="empty" id="empty"><div>왼쪽에서 문서와 프리셋을 고르고 <b>변환하기</b>를 누르세요. 이미지는 <kbd>Ctrl</kbd>+<kbd>V</kbd>로 바로 붙여넣을 수 있습니다.<br>
+      A4 한 장에 변형 하나당 약 6초 걸립니다. 확대해서 끌면 이동하고, 비교 모드에서는 흰 선을 끌어 원본과 스캔을 비교합니다.
+      <span class="gesture-hint"><br>휴대폰: 두 손가락으로 확대, 한 손가락으로 이동, 한 번 탭하면 경계선 이동, 두 번 탭하면 확대.</span></div></div>
+  </div>
+  <div class="splitbar" id="splitbar" hidden>
+    <span>원본</span>
+    <input type="range" id="split" min="2" max="98" value="50" aria-label="원본과 스캔 경계 위치">
+    <span>스캔</span>
+  </div>
+  <div class="info" id="info" hidden>
+    <details>
+      <summary id="infoTitle">결과</summary>
+      <div class="cli"><code id="cli"></code><button type="button" class="btn" id="copyCli">복사</button></div>
+      <div class="hint">같은 파일 이름과 seed로 위 명령을 실행하면 같은 결과가 나옵니다(PDF는 모든 페이지를 처리하며, 이 페이지는 <code>_p00N</code> 파일입니다). 아래는 이 변형에서 실제로 뽑힌 값입니다.</div>
+      <table class="params" id="params"></table>
+    </details>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { src: "sample", file: null, job: null, variant: 0, mode: "compare", zoom: "fit", split: 0.5 };
+
+async function api(url, opts) {
+  let res;
+  try { res = await fetch(url, opts); }
+  catch (e) { throw { detail: `서버에 연결하지 못했습니다: ${e.message}` }; }
+  const text = await res.text();
+  let body;
+  try { body = JSON.parse(text); }
+  catch { throw { detail: `HTTP ${res.status}: ${text.slice(0, 500)}` }; }
+  if (!res.ok) {
+    const d = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail, null, 2);
+    throw { detail: `HTTP ${res.status}: ${d}`, traceback: body.traceback };
+  }
+  return body;
+}
+
+function showError(e) {
+  console.error(e);
+  const box = document.createElement("div");
+  box.className = "error";
+  box.textContent = e.detail || String(e);
+  if (e.traceback) {
+    const det = document.createElement("details");
+    det.innerHTML = "<summary>자세한 오류</summary>";
+    const pre = document.createElement("pre");
+    pre.textContent = e.traceback;
+    det.appendChild(pre);
+    box.appendChild(det);
+  }
+  $("err").replaceChildren(box);
+}
+
+async function init() {
+  const opt = await api("/api/options");
+  for (const p of opt.presets) $("preset").add(new Option(p.name, p.name, false, p.name === opt.default_preset));
+  const ko = {
+    "office-clean": "최신 복합기로 깨끗하게 스캔. 노이즈·기울기 아주 작음, 종이 질감 약함, JPEG 고품질.",
+    "office-medium": "일반 사무실 스캔(기본값). 약한 종이 질감과 조명 차이, 미세한 기울기, JPEG 90 안팎.",
+    "office-adf": "자동 급지(ADF)로 넣은 문서. 기울기·밀림이 크고 세로 방향 흐림, 가끔 먼지 세로줄.",
+    "office-aged": "여러 번 복사·스캔한 문서. 대비 낮음, 배경 어둡고 얼룩, 가장자리 거침, JPEG 품질 낮음.",
+    "ocr-stress": "OCR 강건성 시험용. 기울기, 흐림, 낮은 대비, JPEG 손상, 가로 띠, 작은 왜곡.",
+  };
+  state.presets = Object.fromEntries(opt.presets.map((p) => [p.name, ko[p.name] || p.summary]));
+  $("presetSummary").textContent = state.presets[$("preset").value] || "";
+  for (let i = 1; i <= opt.max_variants; i++) $("variants").add(new Option(String(i), String(i)));
+  if (opt.samples.length) for (const s of opt.samples) $("sample").add(new Option(s, s));
+  else { $("sample").add(new Option("샘플 없음", "")); setSrc("upload"); }
+  $("drop").title = `최대 ${opt.max_upload_mb} MB`;
+  updatePageRow();
+}
+
+const isPdfName = (name) => /\.pdf$/i.test(name || "");
+function updatePageRow() {
+  const name = state.src === "upload" ? state.file?.name : $("sample").value;
+  $("pageRow").hidden = !isPdfName(name);
+}
+function setSrc(src) {
+  state.src = src;
+  for (const b of $("srcSeg").children) b.classList.toggle("on", b.dataset.src === src);
+  $("srcSample").hidden = src !== "sample";
+  $("srcUpload").hidden = src !== "upload";
+  updatePageRow();
+}
+$("sample").onchange = updatePageRow;
+$("srcSeg").onclick = (e) => e.target.dataset.src && setSrc(e.target.dataset.src);
+$("preset").onchange = () => ($("presetSummary").textContent = state.presets[$("preset").value] || "");
+$("rand").onclick = () => ($("seed").value = Math.floor(Math.random() * 1e9));
+
+function setFile(f, origin = "file") {
+  state.file = f;
+  setSrc("upload");
+  if (state.preview) URL.revokeObjectURL(state.preview);
+  state.preview = URL.createObjectURL(f);
+  const info = document.createElement("span");
+  info.className = "hint";
+  info.textContent = `${(f.size / 1048576).toFixed(1)} MB · 눌러서 바꾸기`;
+  const name = document.createElement("b");
+  name.textContent = origin === "paste" ? `붙여넣은 이미지 (${f.name})` : f.name;
+  const parts = [name, document.createElement("br"), info];
+  if (!isPdfName(f.name)) {  // browsers cannot show a PDF in <img>; name and size are enough
+    const img = document.createElement("img");
+    img.alt = "선택한 이미지 미리보기";
+    img.onload = () => (info.textContent = `${img.naturalWidth}×${img.naturalHeight} px · ${info.textContent}`);
+    img.src = state.preview;
+    parts.unshift(img);
+  }
+  $("drop").replaceChildren(...parts);
+  $("page").value = 1;
+  updatePageRow();
+  $("err").replaceChildren();
+}
+
+// ---------- clipboard ----------
+const SERVER_TYPES = { "image/png": "png", "image/jpeg": "jpg", "image/bmp": "bmp", "image/tiff": "tif" };
+
+function pasteName(ext) {
+  const d = new Date(), p = (n) => String(n).padStart(2, "0");
+  return `clipboard-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.${ext}`;
+}
+
+// Formats the server cannot read (WebP, GIF, AVIF ...) are re-encoded to PNG in the browser.
+async function toServerFile(blob) {
+  const ext = SERVER_TYPES[blob.type];
+  if (ext) return new File([blob], pasteName(ext), { type: blob.type });
+  let bitmap;
+  try { bitmap = await createImageBitmap(blob); }
+  catch (e) { throw { detail: `붙여넣은 데이터(${blob.type || "형식 모름"})를 이미지로 읽지 못했습니다: ${e.message}` }; }
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width; canvas.height = bitmap.height;
+  canvas.getContext("2d").drawImage(bitmap, 0, 0);
+  const png = await new Promise((ok) => canvas.toBlob(ok, "image/png"));
+  if (!png) throw { detail: `${blob.type} 이미지를 PNG로 바꾸지 못했습니다.` };
+  return new File([png], pasteName("png"), { type: "image/png" });
+}
+
+async function acceptBlob(blob) {
+  try { setFile(await toServerFile(blob), "paste"); }
+  catch (e) { showError(e); }
+}
+
+document.addEventListener("paste", (e) => {
+  const item = [...(e.clipboardData?.items || [])].find((i) => i.kind === "file" && i.type.startsWith("image/"));
+  if (!item) return; // plain text: leave normal pasting (e.g. into the --set box) alone
+  e.preventDefault();
+  acceptBlob(item.getAsFile());
+});
+
+$("pasteBtn").onclick = async () => {
+  if (!navigator.clipboard?.read) {
+    return showError({ detail: "이 브라우저는 버튼으로 클립보드 이미지를 읽을 수 없습니다. Ctrl+V로 붙여넣어 주세요." });
+  }
+  let items;
+  try { items = await navigator.clipboard.read(); }
+  catch (e) { return showError({ detail: `클립보드를 읽지 못했습니다(권한 거부 등) — ${e.name}: ${e.message} Ctrl+V로 붙여넣어 보세요.` }); }
+  for (const item of items) {
+    const type = item.types.find((t) => t.startsWith("image/"));
+    if (type) return acceptBlob(await item.getType(type));
+  }
+  showError({ detail: "클립보드에 이미지가 없습니다. 이미지를 복사한 뒤 다시 시도하세요." });
+};
+$("drop").onclick = () => $("file").click();
+$("file").onchange = () => $("file").files[0] && setFile($("file").files[0]);
+$("drop").ondragover = (e) => { e.preventDefault(); $("drop").classList.add("over"); };
+$("drop").ondragleave = () => $("drop").classList.remove("over");
+$("drop").ondrop = (e) => { e.preventDefault(); $("drop").classList.remove("over"); if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); };
+
+$("run").onclick = async () => {
+  $("err").replaceChildren();
+  const fd = new FormData();
+  if (state.src === "upload") {
+    if (!state.file) return showError({ detail: "파일을 먼저 선택하세요." });
+    fd.append("file", state.file);
+  } else {
+    if (!$("sample").value) return showError({ detail: "샘플이 없습니다. 내 파일을 올려 주세요." });
+    fd.append("sample", $("sample").value);
+  }
+  fd.append("preset", $("preset").value);
+  fd.append("seed", $("seed").value || "0");
+  fd.append("variants", $("variants").value);
+  fd.append("overrides", $("overrides").value);
+  fd.append("page", $("page").value || "1");
+  const n = Number($("variants").value);
+  const t0 = performance.now();
+  $("run").disabled = true;
+  const tick = setInterval(() => {
+    $("status").textContent = `변환 중… ${((performance.now() - t0) / 1000).toFixed(0)}초 (예상 약 ${n * 6}초)`;
+  }, 250);
+  try {
+    const job = await api("/api/jobs", { method: "POST", body: fd });
+    state.job = job;
+    const pageNote = job.page ? ` · ${job.page_count}쪽 중 ${job.page}쪽` : "";
+    if (job.page_count) $("page").max = job.page_count;
+    $("status").textContent = `완료: ${job.variants.length}장, ${job.elapsed_s}초 · ${job.size[0]}×${job.size[1]} px, ${job.dpi} dpi${pageNote}`;
+    showJob(0);
+    // On phones the viewer sits below the form; bring the result into view.
+    if (matchMedia("(max-width: 820px)").matches) document.querySelector("main").scrollIntoView({ behavior: "smooth" });
+  } catch (e) {
+    $("status").textContent = "실패";
+    showError(e);
+  } finally {
+    clearInterval(tick);
+    $("run").disabled = false;
+  }
+};
+
+function showJob(i) {
+  const job = state.job, v = job.variants[i];
+  state.variant = i;
+  $("tabs").replaceChildren(...job.variants.map((x, k) => {
+    const b = document.createElement("button");
+    b.textContent = `#${x.variant}`;
+    b.title = `seed ${x.seed}`;
+    b.className = k === i ? "on" : "";
+    b.onclick = () => showJob(k);
+    return b;
+  }));
+  $("empty").hidden = true;
+  const first = !$("imgScan").getAttribute("src");
+  $("imgOrig").src = job.original;
+  $("imgScan").src = v.image;
+  $("stage").dataset.w = job.size[0];
+  $("stage").dataset.h = job.size[1];
+  $("dlImg").href = v.image; $("dlImg").download = v.download_name;
+  $("dlMeta").href = v.metadata; $("dlMeta").download = $("dlImg").download.replace(/\.[^.]+$/, ".json");
+  $("dlImg").hidden = $("dlMeta").hidden = false;
+  $("info").hidden = false;
+  $("infoTitle").textContent = `${job.source}${job.page ? ` p.${job.page}` : ""} · ${job.preset} · 변형 #${v.variant} · seed ${v.seed} · 명령어와 파라미터 보기`;
+  $("cli").textContent = job.cli;
+  $("params").replaceChildren(...Object.entries(v.parameters).map(([k, val]) => {
+    const tr = document.createElement("tr");
+    const fmt = (x) => typeof x === "number" ? (Number.isInteger(x) ? String(x) : x.toPrecision(4)) : JSON.stringify(x, (_, y) => typeof y === "number" && !Number.isInteger(y) ? Number(y.toPrecision(4)) : y);
+    tr.innerHTML = "<td></td><td></td>";
+    tr.children[0].textContent = k;
+    tr.children[1].textContent = val === null ? "없음" : fmt(val);
+    return tr;
+  }));
+  if (first) setZoom(state.zoom); else layout();
+}
+
+$("copyCli").onclick = () => navigator.clipboard.writeText($("cli").textContent).then(
+  () => ($("copyCli").textContent = "복사됨"), (e) => showError({ detail: `복사 실패: ${e.message}` }));
+
+// ---------- viewer ----------
+// One pointer pans, two pointers pinch-zoom around their midpoint, a tap moves the
+// compare divider, a double tap steps the zoom. Works the same for mouse, pen and touch.
+const viewer = $("viewer"), stage = $("stage");
+const MAX_ZOOM = 8;
+const fitScale = () => Math.min((viewer.clientWidth - 16) / +stage.dataset.w, (viewer.clientHeight - 16) / +stage.dataset.h);
+const scale = () => (state.zoom === "fit" ? fitScale() : Number(state.zoom));
+
+// Image fraction under a viewport point, and the scroll that puts it back under that point.
+function anchorAt(px, py) {
+  return { fx: (viewer.scrollLeft + px - stage.offsetLeft) / stage.offsetWidth,
+           fy: (viewer.scrollTop + py - stage.offsetTop) / stage.offsetHeight };
+}
+function restoreAnchor(a, px, py) {
+  viewer.scrollLeft = a.fx * stage.offsetWidth + stage.offsetLeft - px;
+  viewer.scrollTop = a.fy * stage.offsetHeight + stage.offsetTop - py;
+}
+function zoomAround(z, px, py) {
+  if (!stage.dataset.w) { state.zoom = z; return; }
+  const a = anchorAt(px, py);
+  state.zoom = z;
+  layout();
+  restoreAnchor(a, px, py);
+  clip();
+}
+const setZoom = (z) => zoomAround(z, viewer.clientWidth / 2, viewer.clientHeight / 2);
+
+function layout() {
+  if (!stage.dataset.w) return;
+  const s = scale();
+  stage.style.width = `${Math.round(+stage.dataset.w * s)}px`;
+  stage.style.height = `${Math.round(+stage.dataset.h * s)}px`;
+  const vMargin = Math.max(8, (viewer.clientHeight - stage.offsetHeight) / 2);
+  stage.style.marginTop = stage.style.marginBottom = `${vMargin}px`;
+  stage.classList.toggle("px", s > 1);
+  $("zoomLabel").textContent = `${Math.round(s * 100)}%`;
+  for (const b of document.querySelectorAll("[data-zoom]")) b.classList.toggle("on", b.dataset.zoom === String(state.zoom));
+  clip();
+}
+function clip() {
+  const compare = Boolean(state.mode === "compare" && stage.dataset.w);
+  $("divider").hidden = $("tagL").hidden = $("tagR").hidden = $("splitbar").hidden = !compare;
+  $("imgOrig").hidden = state.mode === "scan";
+  $("imgScan").hidden = state.mode === "orig";
+  if (!compare) { $("imgScan").style.clipPath = "none"; return; }
+  const x = state.split * viewer.clientWidth;
+  $("divider").style.left = `${x}px`;
+  $("split").value = Math.round(state.split * 100);
+  const inside = viewer.scrollLeft + x - stage.offsetLeft;
+  $("imgScan").style.clipPath = `inset(0 0 0 ${Math.max(0, inside)}px)`;
+}
+function setSplit(fraction) {
+  state.split = Math.min(0.98, Math.max(0.02, fraction));
+  clip();
+}
+for (const b of document.querySelectorAll("[data-zoom]")) b.onclick = () => setZoom(b.dataset.zoom === "fit" ? "fit" : Number(b.dataset.zoom));
+$("modeSeg").onclick = (e) => {
+  if (!e.target.dataset.mode) return;
+  state.mode = e.target.dataset.mode;
+  for (const b of $("modeSeg").children) b.classList.toggle("on", b === e.target);
+  clip();
+};
+$("split").oninput = () => setSplit(Number($("split").value) / 100);
+viewer.addEventListener("scroll", clip);
+window.addEventListener("resize", layout);
+
+const pointers = new Map();
+let gesture = null, lastTap = null, tapTimer = null;
+const local = (e) => { const r = viewer.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+
+function beginGesture() {
+  const pts = [...pointers.values()];
+  if (pts.length === 1) {
+    gesture = { type: "pan", x: pts[0].x, y: pts[0].y, l: viewer.scrollLeft, t: viewer.scrollTop };
+  } else if (pts.length >= 2 && stage.dataset.w) {
+    const [a, b] = pts;
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    gesture = { type: "pinch", d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, s0: scale(), anchor: anchorAt(mid.x, mid.y) };
+  }
+}
+viewer.addEventListener("pointerdown", (e) => {
+  const p = local(e);
+  pointers.set(e.pointerId, { ...p, x0: p.x, y0: p.y, t0: performance.now(), type: e.pointerType });
+  viewer.classList.add("drag");
+  beginGesture();
+  viewer.setPointerCapture(e.pointerId);
+});
+viewer.addEventListener("pointermove", (e) => {
+  const p = pointers.get(e.pointerId);
+  if (!p || !gesture) return;
+  Object.assign(p, local(e));
+  if (gesture.type === "pan" && pointers.size === 1) {
+    viewer.scrollLeft = gesture.l - (p.x - gesture.x);
+    viewer.scrollTop = gesture.t - (p.y - gesture.y);
+  } else if (gesture.type === "pinch" && pointers.size >= 2) {
+    const [a, b] = [...pointers.values()];
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const s = Math.min(MAX_ZOOM, Math.max(fitScale(), gesture.s0 * Math.hypot(a.x - b.x, a.y - b.y) / gesture.d0));
+    state.zoom = s <= fitScale() * 1.001 ? "fit" : s;
+    layout();
+    restoreAnchor(gesture.anchor, mid.x, mid.y);
+    clip();
+  }
+});
+function endPointer(e) {
+  const p = pointers.get(e.pointerId);
+  if (!p) return;
+  pointers.delete(e.pointerId);
+  const wasSingle = gesture?.type === "pan" && pointers.size === 0;
+  if (pointers.size) beginGesture(); else { gesture = null; viewer.classList.remove("drag"); }
+  if (e.type !== "pointerup" || !wasSingle) return;
+  const moved = Math.hypot(p.x - p.x0, p.y - p.y0), quick = performance.now() - p.t0 < 300;
+  if (moved < 10 && quick) onTap(p);
+}
+viewer.addEventListener("pointerup", endPointer);
+viewer.addEventListener("pointercancel", endPointer);
+
+function stepZoom(px, py) {
+  const z = state.zoom === "fit" ? 1 : Number(state.zoom) >= 4 ? "fit" : Number(state.zoom) < 1 ? 1 : Number(state.zoom) * 2;
+  zoomAround(z, px, py);
+}
+// Mouse: double click zooms; single clicks do nothing (the divider has its own handle).
+// Touch/pen: a tap moves the compare divider, a double tap zooms.
+function onTap(p) {
+  const now = performance.now();
+  const isDouble = lastTap && now - lastTap.t < 300 && Math.hypot(p.x - lastTap.x, p.y - lastTap.y) < 30;
+  lastTap = isDouble ? null : { t: now, x: p.x, y: p.y };
+  clearTimeout(tapTimer);
+  if (isDouble) return stepZoom(p.x, p.y);
+  if (p.type === "mouse" || state.mode !== "compare") return;
+  tapTimer = setTimeout(() => setSplit(p.x / viewer.clientWidth), 300);
+}
+
+// Trackpad pinch (and Ctrl+wheel) zooms around the cursor.
+viewer.addEventListener("wheel", (e) => {
+  if (!e.ctrlKey || !stage.dataset.w) return;
+  e.preventDefault();
+  const p = local(e);
+  const s = Math.min(MAX_ZOOM, Math.max(fitScale(), scale() * Math.exp(-e.deltaY * 0.002)));
+  zoomAround(s <= fitScale() * 1.001 ? "fit" : s, p.x, p.y);
+}, { passive: false });
+
+const divider = $("divider");
+divider.addEventListener("pointerdown", (e) => {
+  e.stopPropagation(); e.preventDefault();
+  divider.onpointermove = (ev) => {
+    const r = $("wrap").getBoundingClientRect();
+    setSplit((ev.clientX - r.left) / r.width);
+  };
+  divider.onpointerup = divider.onpointercancel = () => (divider.onpointermove = null);
+  divider.setPointerCapture(e.pointerId);
+});
+
+init().catch(showError);
+</script>
+</body>
+</html>

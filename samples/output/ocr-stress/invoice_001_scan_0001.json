@@ -1,0 +1,73 @@
+{
+  "source": "invoice_001.png",
+  "page": null,
+  "output": "invoice_001_scan_0001.jpg",
+  "preset": "ocr-stress",
+  "base_seed": 1000,
+  "seed": 1993552071819705137,
+  "variant": 1,
+  "dpi": 300,
+  "input_dpi": {
+    "x": 300.0,
+    "y": 300.0,
+    "origin": "metadata"
+  },
+  "parameters": {
+    "printer_gamma": 1.109830884749188,
+    "printer_black_density": 0.9339842245992249,
+    "printer_psf_sigma_x": 0.6112616940168114,
+    "printer_psf_sigma_y": 1.0059086746240977,
+    "dot_gain_radius_px": 0.25561662139937424,
+    "dot_gain_strength": 0.09966006556506327,
+    "edge_roughness_px": 0.1784111580079506,
+    "toner_density_strength": 0.011775468609588122,
+    "toner_density_scale_px": 8.824835763933272,
+    "paper_low_frequency_strength": 0.011359899205855988,
+    "paper_low_frequency_scale_px": 288.1761197177717,
+    "paper_fiber_strength": 0.005010445652470905,
+    "paper_fiber_scale_px": 46.63657467663221,
+    "paper_fiber_elongation": 2.8039016336329756,
+    "paper_fiber_direction": "x",
+    "paper_fine_grain_strength": 0.0028888441980306745,
+    "rotation_deg": -0.2652774771830124,
+    "scale_x": 1.0049217341831038,
+    "scale_y": 0.9986907491406695,
+    "translation_x_px": 7.625576784344673,
+    "translation_y_px": -3.81879855268285,
+    "perspective_max_corner_shift_px": 4.268066674726711,
+    "scanner_psf_sigma_x": 0.6209337523114214,
+    "scanner_psf_sigma_y": 0.7855502558415497,
+    "illumination_strength": 0.012320064744497362,
+    "illumination_edge_falloff": 0.016992760696874894,
+    "noise_gaussian_sigma": 0.0020592754104855303,
+    "noise_shot_strength": 0.003182978343865679,
+    "noise_row_sigma": 0.0009425498136443926,
+    "noise_column_sigma": 0.0006465303078549626,
+    "white_balance": [
+      0.9991228692771303,
+      1.0025320658626238,
+      0.9945469476644594
+    ],
+    "tone_gamma": 0.960757171785125,
+    "tone_black_level": 0.10110701083886575,
+    "tone_white_level": 0.897258275994367,
+    "background_threshold": 0.8686173316254281,
+    "background_strength": 0.44643839959502757,
+    "sharpen_sigma": 0.4259091451105154,
+    "sharpen_amount": 0.40055251366667377,
+    "vertical_streak": null,
+    "horizontal_banding": {
+      "strength": 0.00734377736796374,
+      "scale_px": 37.26445344713765
+    },
+    "format": "jpg",
+    "jpeg_quality": 90,
+    "jpeg_subsampling": "420"
+  },
+  "versions": {
+    "scan_sim": "0.1.0",
+    "numpy": "2.5.3",
+    "opencv": "4.14.0",
+    "pillow": "12.3.0"
+  }
+}
